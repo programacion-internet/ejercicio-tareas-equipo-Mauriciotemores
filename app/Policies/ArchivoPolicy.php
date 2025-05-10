@@ -13,7 +13,8 @@ class ArchivoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        // Permite ver archivos si el usuario está autenticado
+        return $user !== null;
     }
 
     /**
@@ -21,7 +22,11 @@ class ArchivoPolicy
      */
     public function view(User $user, Archivo $archivo): bool
     {
-        return false;
+        // Permite ver si el usuario es creador o participante aceptado
+        return $user->tareasParticipantes()
+            ->where('tarea_id', $archivo->tarea_id)
+            ->where('aceptada', true)
+            ->exists() || $user->id === $archivo->tarea->user_id;
     }
 
     /**
@@ -29,7 +34,8 @@ class ArchivoPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        // Permite crear archivos a cualquier usuario autenticado
+        return $user !== null;
     }
 
     /**
@@ -37,7 +43,8 @@ class ArchivoPolicy
      */
     public function update(User $user, Archivo $archivo): bool
     {
-        return false;
+        // Solo el creador del archivo o de la tarea puede actualizar
+        return $user->id === $archivo->user_id || $user->id === $archivo->tarea->user_id;
     }
 
     /**
@@ -45,7 +52,8 @@ class ArchivoPolicy
      */
     public function delete(User $user, Archivo $archivo): bool
     {
-        return false;
+        // Solo el creador del archivo o de la tarea puede eliminar
+        return $user->id === $archivo->user_id || $user->id === $archivo->tarea->user_id;
     }
 
     /**
@@ -53,6 +61,7 @@ class ArchivoPolicy
      */
     public function restore(User $user, Archivo $archivo): bool
     {
+        // No permitir restaurar por defecto
         return false;
     }
 
@@ -61,6 +70,7 @@ class ArchivoPolicy
      */
     public function forceDelete(User $user, Archivo $archivo): bool
     {
-        return false;
+        // Solo el creador de la tarea puede borrar permanentemente
+        return $user->id === $archivo->tarea->user_id;
     }
 }

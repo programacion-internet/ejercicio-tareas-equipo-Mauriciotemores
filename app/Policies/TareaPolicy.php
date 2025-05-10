@@ -56,11 +56,13 @@ class TareaPolicy
 
     public function restore(User $user, Tarea $tarea): bool
     {
+        // No permitir restaurar por defecto
         return false;
     }
 
     public function forceDelete(User $user, Tarea $tarea): bool
     {
+        // No permitir eliminación permanente por defecto
         return false;
     }
 
@@ -88,7 +90,7 @@ class TareaPolicy
 
     public function deleteFiles(User $user, Tarea $tarea): Response
     {
-        // Solo el creador puede eliminar archivos (o el dueño del archivo?)
+        // Solo el creador puede eliminar archivos
         return $user->id === $tarea->user_id
             ? Response::allow()
             : Response::deny('Solo el creador puede eliminar archivos de esta tarea');
