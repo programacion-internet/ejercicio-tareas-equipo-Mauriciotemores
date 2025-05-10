@@ -9,6 +9,7 @@ use App\Http\Requests\StoreTareaRequest;
 use App\Http\Requests\UpdateTareaRequest;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\InvitacionTareaMail;
+use Illuminate\Routing\Controller as BaseController;
 
 class TareaController extends Controller
 {
