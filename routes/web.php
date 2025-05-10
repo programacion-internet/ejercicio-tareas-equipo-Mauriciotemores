@@ -14,6 +14,11 @@ Route::get('/home', function () {
     return redirect()->route('tareas.index');
 });
 
+Route::get('/test-email', function() {
+    $tarea = App\Models\Tarea::first();
+    return new App\Mail\InvitacionTareaMail($tarea);
+});
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -26,7 +31,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 
     // Tareas
-    Route::resource('tareas', TareaController::class);
+    Route::resource('tareas', TareaController::class)->middleware('auth');
     Route::post('tareas/{tarea}/invite', [TareaController::class, 'invite'])->name('tareas.invite');
     Route::resource('tareas.files', 'App\Http\Controllers\ArchivoController')->only(['store', 'destroy']);
 
