@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Tarea extends Model
 {
-    /** @use HasFactory<\Database\Factories\TareaFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -21,18 +20,24 @@ class Tarea extends Model
         'fecha_limite' => 'date',
     ];
 
-    /**
-     * Tareas que pertenecen al usuario.
-     *
-     * @return void
-     */
+    // Relación con el creador (owner)
     public function owner()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function users()
+    // Relación many-to-many con usuarios (participantes)
+    public function participantes()
     {
-        return $this->belongsToMany(User::class, 'tarea_user', 'tarea_id', 'user_id');
+        return $this->belongsToMany(User::class, 'tarea_user')
+                    ->withPivot('token', 'aceptada')
+                    ->withTimestamps()
+                    ->using(Invitacion::class);
+    }
+
+    // Relación con archivos
+    public function archivos()
+    {
+        return $this->hasMany(Archivo::class);
     }
 }
