@@ -8,59 +8,91 @@ use Illuminate\Auth\Access\Response;
 
 class TareaPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        // Solo usuarios autenticados pueden ver listados de tareas
+        return $user !== null;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Tarea $tarea): bool
+    public function view(User $user, Tarea $tarea): Response
     {
-        return false;
+        // El creador de la tarea siempre puede verla
+        if ($user->id === $tarea->user_id) {
+            return Response::allow();
+        }
+
+        // Usuarios invitados que hayan aceptado la invitación pueden verla
+        if ($user->tareasParticipantes()
+                ->where('tarea_id', $tarea->id)
+                ->where('aceptada', true)
+                ->exists()) {
+            return Response::allow();
+        }
+
+        return Response::deny('No tienes permiso para ver esta tarea');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        // Cualquier usuario autenticado puede crear tareas
+        return $user !== null;
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Tarea $tarea): bool
+    public function update(User $user, Tarea $tarea): Response
     {
-        return false;
+        // Solo el creador puede editar la tarea
+        return $user->id === $tarea->user_id
+            ? Response::allow()
+            : Response::deny('Solo el creador puede modificar esta tarea');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Tarea $tarea): bool
+    public function delete(User $user, Tarea $tarea): Response
     {
-        return false;
+        // Solo el creador puede eliminar la tarea
+        return $user->id === $tarea->user_id
+            ? Response::allow()
+            : Response::deny('Solo el creador puede eliminar esta tarea');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Tarea $tarea): bool
     {
+        // No permitir restaurar por defecto
         return false;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Tarea $tarea): bool
     {
+        // No permitir eliminación permanente por defecto
         return false;
+    }
+
+    public function invite(User $user, Tarea $tarea): Response
+    {
+        // Solo el creador puede invitar a otros
+        return $user->id === $tarea->user_id
+            ? Response::allow()
+            : Response::deny('Solo el creador puede invitar participantes');
+    }
+
+    public function uploadFiles(User $user, Tarea $tarea): Response
+    {
+        // El creador o participantes aceptados pueden subir archivos
+        if ($user->id === $tarea->user_id || 
+            $user->tareasParticipantes()
+                ->where('tarea_id', $tarea->id)
+                ->where('aceptada', true)
+                ->exists()) {
+            return Response::allow();
+        }
+
+        return Response::deny('No tienes permiso para subir archivos a esta tarea');
+    }
+
+    public function deleteFiles(User $user, Tarea $tarea): Response
+    {
+        // Solo el creador puede eliminar archivos
+        return $user->id === $tarea->user_id
+            ? Response::allow()
+            : Response::deny('Solo el creador puede eliminar archivos de esta tarea');
     }
 }
